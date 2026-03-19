@@ -1,6 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+
+import authRoutes from './routes/auth.routes';
+import usuariosRoutes from './routes/usuarios.routes';
+import beneficiariosRoutes from './routes/beneficiarios.routes';
+import casosRoutes from './routes/casos.routes';
+import intervencionesRoutes from './routes/intervenciones.routes';
+import documentosRoutes from './routes/documentos.routes';
+import etiquetasRoutes from './routes/etiquetas.routes';
+
+import { startCronJobs } from './lib/cron';
 
 dotenv.config();
 
@@ -9,11 +20,23 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+// Servir archivos estáticos subidos
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+
+// Rutas API
+app.use('/api/auth', authRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/beneficiarios', beneficiariosRoutes);
+app.use('/api/casos', casosRoutes);
+app.use('/api/intervenciones', intervencionesRoutes);
+app.use('/api/documentos', documentosRoutes);
+app.use('/api/etiquetas', etiquetasRoutes);
 
 app.get('/', (req, res) => {
-  res.send('API is running...');
+  res.send('Gestor de Casos Sociales API is running...');
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  startCronJobs();
 });

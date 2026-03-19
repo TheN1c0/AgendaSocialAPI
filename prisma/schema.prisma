@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -8,15 +7,127 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  DEMO
+enum Rol {
+  admin
+  trabajador_social
 }
 
-model User {
+enum Tipo {
+  real
+  demo
+}
+
+enum PrioridadCaso {
+  alta
+  media
+  baja
+}
+
+enum EstadoCaso {
+  abierto
+  en_proceso
+  cerrado
+  derivado
+}
+
+enum TipoDocumento {
+  pdf
+  imagen
+  otro
+}
+
+model Usuario {
   id        String   @id @default(uuid())
+  nombre    String
   email     String   @unique
   password  String
-  role      Role     @default(DEMO)
+  rol       Rol      @default(trabajador_social)
+  tipo      Tipo     @default(real)
+  activo    Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  casosAsignados Caso[]         @relation("CasoAsignado")
+  intervenciones Intervencion[]
+}
+
+model Beneficiario {
+  id              String    @id @default(uuid())
+  nombre          String
+  rut             String    @unique
+  telefono        String?
+  email           String?
+  direccion       String?
+  fechaNacimiento DateTime?
+  grupoFamiliar   String?
+  creadoPorDemo   Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  casos Caso[]
+}
+
+model Caso {
+  id              String        @id @default(uuid())
+  beneficiarioId  String
+  tipo            String
+  descripcion     String
+  objetivos       String?
+  prioridad       PrioridadCaso @default(media)
+  estado          EstadoCaso    @default(abierto)
+  asignadoAId     String?
+  derivadoDesde   String?
+  proximaRevision DateTime?
+  creadoPorDemo   Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  beneficiario   Beneficiario   @relation(fields: [beneficiarioId], references: [id])
+  asignadoA      Usuario?       @relation("CasoAsignado", fields: [asignadoAId], references: [id])
+  intervenciones Intervencion[]
+  documentos     Documento[]
+  etiquetas      EtiquetaCaso[]
+}
+
+model Intervencion {
+  id            String   @id @default(uuid())
+  casoId        String
+  autorId       String
+  descripcion   String
+  creadoPorDemo Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  caso  Caso    @relation(fields: [casoId], references: [id])
+  autor Usuario @relation(fields: [autorId], references: [id])
+}
+
+model Documento {
+  id            String        @id @default(uuid())
+  casoId        String
+  nombre        String
+  url           String
+  tipo          TipoDocumento @default(otro)
+  tamanio       String?
+  creadoPorDemo Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+
+  caso Caso @relation(fields: [casoId], references: [id])
+}
+
+model Etiqueta {
+  id     String         @id @default(uuid())
+  nombre String         @unique
+  color  String
+
+  casos EtiquetaCaso[]
+}
+
+model EtiquetaCaso {
+  casoId     String
+  etiquetaId String
+
+  caso     Caso     @relation(fields: [casoId], references: [id])
+  etiqueta Etiqueta @relation(fields: [etiquetaId], references: [id])
+
+  @@id([casoId, etiquetaId])
 }
