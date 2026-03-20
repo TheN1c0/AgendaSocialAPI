@@ -27,9 +27,11 @@ export const createIntervencion = async (req: Request, res: Response) => {
       }
     }
 
+    const { descripcion } = req.body;
+
     const intervencion = await prisma.intervencion.create({
       data: {
-        ...req.body,
+        descripcion,
         casoId,
         autorId: req.user!.id,
         creadoPorDemo: req.user?.tipo === 'demo'

@@ -4,6 +4,10 @@ import bcrypt from 'bcryptjs';
 
 export const getUsuarios = async (req: Request, res: Response) => {
   try {
+    if (req.user?.tipo === 'demo') {
+      return res.status(403).json({ error: 'Listar usuarios no está disponible en acceso demo' });
+    }
+
     const usuarios = await prisma.usuario.findMany({
       select: { id: true, nombre: true, email: true, rol: true, tipo: true, activo: true, createdAt: true },
       orderBy: { createdAt: 'desc' }

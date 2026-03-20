@@ -69,6 +69,7 @@ model Beneficiario {
 
 model Caso {
   id              String        @id @default(uuid())
+  codigoVisible   String?       @unique
   beneficiarioId  String
   tipo            String
   descripcion     String

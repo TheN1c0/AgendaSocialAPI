@@ -12,6 +12,6 @@ router.get('/', getCasos);
 router.get('/:id', getCasoById);
 router.post('/', checkLimiteDemo('casos'), createCaso);
 router.put('/:id', updateCaso);
-router.delete('/:id', requireRole('admin'), deleteCaso);
+router.delete('/:id', deleteCaso);
 
 export default router;

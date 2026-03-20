@@ -6,10 +6,9 @@ import { requireRole } from '../middlewares/role.middleware';
 const router = Router();
 
 router.use(authenticate);
-router.use(requireRole('admin'));
 
 router.get('/', getUsuarios);
-router.post('/', createUsuario);
-router.put('/:id', updateUsuario);
+router.post('/', requireRole('admin'), createUsuario);
+router.put('/:id', requireRole('admin'), updateUsuario);
 
 export default router;

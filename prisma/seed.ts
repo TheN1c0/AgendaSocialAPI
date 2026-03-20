@@ -115,7 +115,7 @@ async function main() {
 
   const casos = []
   for (let i = 0; i < 10; i++) {
-    const asignadoA = profesionales[i % profesionales.length]
+    const asignadoA = demoUser // Todos los casos iniciales asignados al usuario demo
     const beneficiario = beneficiarios[i % beneficiarios.length]
     
     // Check if it exists to avoid running into unique constraints if running repeatedly, though we use upsert usually it's hard for Caso without unique key.

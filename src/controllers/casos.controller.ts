@@ -108,9 +108,27 @@ export const createCaso = async (req: Request, res: Response) => {
       asignadoAId = req.user.id;
     }
 
+    const prefix = req.user?.nombre ? req.user.nombre.substring(0, 3).toUpperCase().padEnd(3, 'X') : 'CAS';
+    
+    const lastCaso = await prisma.caso.findFirst({
+      where: { codigoVisible: { startsWith: `${prefix}-` } },
+      orderBy: { codigoVisible: 'desc' }
+    });
+
+    let nextNumber = 1;
+    if (lastCaso && lastCaso.codigoVisible) {
+      const parts = lastCaso.codigoVisible.split('-');
+      if (parts.length === 2 && !isNaN(Number(parts[1]))) {
+        nextNumber = Number(parts[1]) + 1;
+      }
+    }
+    
+    const codigoVisible = `${prefix}-${nextNumber.toString().padStart(3, '0')}`;
+
     const caso = await prisma.caso.create({
       data: {
         ...data,
+        codigoVisible,
         asignadoAId,
         creadoPorDemo: req.user?.tipo === 'demo',
         ...(etiquetas?.length > 0 && {
@@ -128,6 +146,7 @@ export const createCaso = async (req: Request, res: Response) => {
     });
     res.status(201).json(caso);
   } catch (error) {
+    console.error('Error in createCaso:', error);
     res.status(500).json({ error: 'Error al crear caso' });
   }
 };
@@ -191,6 +210,14 @@ export const updateCaso = async (req: Request, res: Response) => {
 export const deleteCaso = async (req: Request, res: Response) => {
   try {
     const casoId = req.params.id;
+
+    const currentCaso = await prisma.caso.findUnique({ where: { id: casoId } });
+    if (!currentCaso) return res.status(404).json({ error: 'Caso no encontrado' });
+
+    if (req.user?.rol === 'trabajador_social' && currentCaso.asignadoAId !== req.user.id) {
+      return res.status(403).json({ error: 'No tienes permisos para eliminar este caso' });
+    }
+
     await prisma.$transaction([
       prisma.etiquetaCaso.deleteMany({ where: { casoId } }),
       prisma.documento.deleteMany({ where: { casoId } }),

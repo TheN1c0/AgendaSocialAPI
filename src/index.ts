@@ -10,6 +10,7 @@ import casosRoutes from './routes/casos.routes';
 import intervencionesRoutes from './routes/intervenciones.routes';
 import documentosRoutes from './routes/documentos.routes';
 import etiquetasRoutes from './routes/etiquetas.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 import { startCronJobs } from './lib/cron';
 
@@ -31,6 +32,7 @@ app.use('/api/casos', casosRoutes);
 app.use('/api/intervenciones', intervencionesRoutes);
 app.use('/api/documentos', documentosRoutes);
 app.use('/api/etiquetas', etiquetasRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
   res.send('Gestor de Casos Sociales API is running...');
@@ -40,3 +42,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   startCronJobs();
 });
+// Trigger restart
