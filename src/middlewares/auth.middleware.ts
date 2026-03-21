@@ -19,13 +19,26 @@ declare global {
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const esProduccion = process.env.NODE_ENV === 'production';
+
+    // Leer token desde cookie o header según entorno
+    const token = esProduccion
+      ? req.cookies?.token
+      : req.cookies?.token || req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
       return res.status(401).json({ error: 'No autenticado' });
     }
 
-    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { id: string };
+
+    // Después de verificar firma JWT → solo en producción verificar SesionActiva:
+    if (esProduccion) {
+      const sesion = await prisma.sesionActiva.findFirst({
+        where: { token, activo: true, expiraEn: { gt: new Date() } }
+      });
+      if (!sesion) return res.status(401).json({ error: 'Sesión inválida o expirada' });
+    }
 
     const usuario = await prisma.usuario.findUnique({ where: { id: decoded.id } });
     

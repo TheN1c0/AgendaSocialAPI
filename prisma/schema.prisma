@@ -49,6 +49,9 @@ model Usuario {
 
   casosAsignados Caso[]         @relation("CasoAsignado")
   intervenciones Intervencion[]
+  notificaciones Notificacion[]
+  tiposCaso      TipoCaso[]
+  sesiones       SesionActiva[]
 }
 
 model Beneficiario {
@@ -68,26 +71,28 @@ model Beneficiario {
 }
 
 model Caso {
-  id              String        @id @default(uuid())
-  codigoVisible   String?       @unique
-  beneficiarioId  String
-  tipo            String
-  descripcion     String
-  objetivos       String?
-  prioridad       PrioridadCaso @default(media)
-  estado          EstadoCaso    @default(abierto)
-  asignadoAId     String?
-  derivadoDesde   String?
-  proximaRevision DateTime?
-  creadoPorDemo   Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                 String        @id @default(uuid())
+  codigoVisible      String?       @unique
+  beneficiarioId     String
+  tipo               String
+  descripcion        String
+  objetivos          String?
+  prioridad          PrioridadCaso @default(media)
+  estado             EstadoCaso    @default(abierto)
+  asignadoAId        String?
+  derivadoDesde      String?
+  proximaRevision    DateTime?
+  creadoPorDemo      Boolean       @default(false)
+  revisionNotificada Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   beneficiario   Beneficiario   @relation(fields: [beneficiarioId], references: [id])
   asignadoA      Usuario?       @relation("CasoAsignado", fields: [asignadoAId], references: [id])
   intervenciones Intervencion[]
   documentos     Documento[]
   etiquetas      EtiquetaCaso[]
+  notificaciones Notificacion[]
 }
 
 model Intervencion {
@@ -116,8 +121,8 @@ model Documento {
 }
 
 model Etiqueta {
-  id     String         @id @default(uuid())
-  nombre String         @unique
+  id     String @id @default(uuid())
+  nombre String @unique
   color  String
 
   casos EtiquetaCaso[]
@@ -131,4 +136,42 @@ model EtiquetaCaso {
   etiqueta Etiqueta @relation(fields: [etiquetaId], references: [id])
 
   @@id([casoId, etiquetaId])
+}
+
+model Notificacion {
+  id        String   @id @default(uuid())
+  tipo      String
+  mensaje   String
+  leida     Boolean  @default(false)
+  usuarioId String
+  casoId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  caso    Caso?   @relation(fields: [casoId], references: [id])
+}
+
+model TipoCaso {
+  id            String   @id @default(uuid())
+  nombre        String
+  usuarioId     String
+  creadoPorDemo Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id])
+}
+
+model SesionActiva {
+  id          String   @id @default(uuid())
+  usuarioId   String
+  token       String   @unique
+  dispositivo String?
+  ip          String?
+  activo      Boolean  @default(true)
+  creadoEn    DateTime @default(now())
+  expiraEn    DateTime
+
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
 }
