@@ -6,7 +6,6 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
-  // 1. Crear etiquetas base
   const etiquetasData = [
     { nombre: 'Urgente', color: '#E24B4A' },
     { nombre: 'Familia', color: '#1D9E75' },
@@ -14,14 +13,6 @@ async function main() {
     { nombre: 'Empleo', color: '#BA7517' },
     { nombre: 'Salud', color: '#534AB7' },
   ]
-
-  for (const e of etiquetasData) {
-    await prisma.etiqueta.upsert({
-      where: { nombre: e.nombre },
-      update: {},
-      create: e,
-    })
-  }
 
   // 2. Crear usuario admin real
   const adminPassword = await bcrypt.hash('cambiar_en_produccion', 10)
@@ -78,6 +69,18 @@ async function main() {
     },
   })
 
+  // 1.5. Crear etiquetas base para cada usuario
+  const allUsers = [admin, demoUser, prof1, prof2]
+  for (const u of allUsers) {
+    for (const e of etiquetasData) {
+      await prisma.etiqueta.upsert({
+        where: { nombre_usuarioId: { nombre: e.nombre, usuarioId: u.id } },
+        update: {},
+        create: { ...e, usuarioId: u.id, creadoPorDemo: u.tipo === 'demo' },
+      })
+    }
+  }
+
   // 5. Crear 5 beneficiarios con RUTs chilenos válidos
   const beneficiariosData = [
     { nombre: 'Juan Pérez', rut: '11.111.111-1', telefono: '+56911111111', grupoFamiliar: '4', creadoPorDemo: false },
@@ -111,7 +114,7 @@ async function main() {
     'baja', 'baja', 'baja'
   ]
 
-  const tsLabels = await prisma.etiqueta.findMany()
+  const tsLabels = await prisma.etiqueta.findMany({ where: { usuarioId: demoUser.id } })
 
   const casos = []
   for (let i = 0; i < 10; i++) {

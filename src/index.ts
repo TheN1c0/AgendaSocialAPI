@@ -54,4 +54,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   startCronJobs();
 });
-// Trigger restart
+// Trigger restart para cargar tipos-caso y notificaciones

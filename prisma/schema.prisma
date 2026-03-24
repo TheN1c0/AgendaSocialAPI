@@ -51,6 +51,7 @@ model Usuario {
   intervenciones Intervencion[]
   notificaciones Notificacion[]
   tiposCaso      TipoCaso[]
+  etiquetas      Etiqueta[]
   sesiones       SesionActiva[]
 }
 
@@ -122,11 +123,18 @@ model Documento {
 }
 
 model Etiqueta {
-  id     String @id @default(uuid())
-  nombre String @unique
-  color  String
+  id            String   @id @default(uuid())
+  nombre        String
+  color         String
+  usuarioId     String
+  creadoPorDemo Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  casos EtiquetaCaso[]
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id])
+  casos         EtiquetaCaso[]
+
+  @@unique([nombre, usuarioId])
 }
 
 model EtiquetaCaso {

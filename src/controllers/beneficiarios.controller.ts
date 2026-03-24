@@ -100,12 +100,23 @@ export const deleteBeneficiario = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
-    // Si es demo, eliminar realmente
+    // Si es demo, eliminar realmente en cascada
     if (req.user?.tipo === 'demo') {
+      const casos = await prisma.caso.findMany({ where: { beneficiarioId: id }, select: { id: true } });
+      const casosIds = casos.map(c => c.id);
+      
+      if (casosIds.length > 0) {
+        await prisma.intervencion.deleteMany({ where: { casoId: { in: casosIds } } });
+        await prisma.documento.deleteMany({ where: { casoId: { in: casosIds } } });
+        await prisma.etiquetaCaso.deleteMany({ where: { casoId: { in: casosIds } } });
+        await prisma.notificacion.deleteMany({ where: { casoId: { in: casosIds } } });
+        await prisma.caso.deleteMany({ where: { id: { in: casosIds } } });
+      }
+
       await prisma.beneficiario.delete({
         where: { id }
       });
-      return res.json({ message: 'Beneficiario eliminado permanentemente (modo demo)' });
+      return res.json({ message: 'Beneficiario y sus casos eliminados permanentemente (modo demo)' });
     }
 
     // Si es usuario real, usar papelera (soft delete)
