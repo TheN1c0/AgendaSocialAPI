@@ -4,7 +4,7 @@ import { EstadoCaso, PrioridadCaso } from '@prisma/client';
 
 export const getCasos = async (req: Request, res: Response) => {
   try {
-    const { beneficiarioId, estado, prioridad, profesionalId, q, page = '1', limit = '10' } = req.query;
+    const { beneficiarioId, estado, prioridad, profesionalId, etiquetaId, q, page = '1', limit = '10' } = req.query;
     
     let whereClause: any = {};
 
@@ -18,6 +18,7 @@ export const getCasos = async (req: Request, res: Response) => {
     if (beneficiarioId) whereClause.beneficiarioId = String(beneficiarioId);
     if (estado) whereClause.estado = estado as EstadoCaso;
     if (prioridad) whereClause.prioridad = prioridad as PrioridadCaso;
+    if (etiquetaId) whereClause.etiquetas = { some: { etiquetaId: String(etiquetaId) } };
     
     if (q) {
       const search = String(q);
@@ -34,6 +35,9 @@ export const getCasos = async (req: Request, res: Response) => {
         }
       ];
     }
+    
+    console.log('--- GET CASOS RECIBE ---', req.query);
+    console.log('--- WHERE CLAUSE ---', JSON.stringify(whereClause, null, 2));
 
     const skip = (Number(page) - 1) * Number(limit);
     const take = Number(limit);
