@@ -4,16 +4,14 @@ import { prisma } from '../lib/prisma';
 export const getBeneficiarios = async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
-    let whereClause = {};
+    let whereClause: any = { activo: true };
 
     if (q) {
       const search = String(q);
-      whereClause = {
-        OR: [
+      whereClause.OR = [
           { nombre: { contains: search, mode: 'insensitive' } },
           { rut: { contains: search, mode: 'insensitive' } },
-        ]
-      };
+      ];
     }
 
     const beneficiarios = await prisma.beneficiario.findMany({
@@ -31,8 +29,8 @@ export const getBeneficiarios = async (req: Request, res: Response) => {
 
 export const getBeneficiarioById = async (req: Request, res: Response) => {
   try {
-    const beneficiario = await prisma.beneficiario.findUnique({
-      where: { id: req.params.id },
+    const beneficiario = await prisma.beneficiario.findFirst({
+      where: { id: req.params.id, activo: true },
       include: {
         casos: {
           include: {
@@ -95,5 +93,32 @@ export const updateBeneficiario = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'El RUT ingresado ya se encuentra registrado.' });
     }
     res.status(500).json({ error: 'Error al actualizar beneficiario' });
+  }
+};
+
+export const deleteBeneficiario = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Si es demo, eliminar realmente
+    if (req.user?.tipo === 'demo') {
+      await prisma.beneficiario.delete({
+        where: { id }
+      });
+      return res.json({ message: 'Beneficiario eliminado permanentemente (modo demo)' });
+    }
+
+    // Si es usuario real, usar papelera (soft delete)
+    await prisma.beneficiario.update({
+      where: { id },
+      data: { activo: false }
+    });
+    res.json({ message: 'Beneficiario enviado a papelera exitosamente' });
+  } catch (error: any) {
+    console.error('Error al eliminar (soft delete/hard delete) beneficiario:', error);
+    if (error.code === 'P2003') {
+      return res.status(400).json({ error: 'No se puede eliminar el beneficiario porque tiene casos u otros registros asociados.' });
+    }
+    res.status(500).json({ error: 'Error interno al eliminar el beneficiario.' });
   }
 };

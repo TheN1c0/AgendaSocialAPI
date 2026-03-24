@@ -3,18 +3,50 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 import { detectarDispositivo } from '../lib/dispositivo';
+import { verifyTurnstile } from '../lib/turnstile';
+
+// In-memory brute force protection tracking (IP based)
+const fallidosPorIP = new Map<string, { count: number, timestamp: number }>();
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, turnstileToken } = req.body;
+    const ip = req.ip || 'unknown';
+
+    // Limpiar registros antiguos (15 minutos)
+    const record = fallidosPorIP.get(ip);
+    if (record && Date.now() - record.timestamp > 15 * 60 * 1000) {
+      fallidosPorIP.delete(ip);
+    }
+    
+    const currentFails = fallidosPorIP.get(ip)?.count || 0;
+    const isDemo = email === 'demo@tuapp.cl';
+
+    if (isDemo || currentFails >= 3) {
+      if (!turnstileToken) {
+        return res.status(400).json({ error: 'Comprobación de seguridad requerida (Captcha).', requiereCaptcha: true });
+      }
+      
+      const isHuman = await verifyTurnstile(turnstileToken, ip);
+      if (!isHuman) {
+        return res.status(400).json({ error: 'Fallo en la verificación de seguridad. Recargue la página e intente nuevamente.' });
+      }
+    }
+
     const usuario = await prisma.usuario.findUnique({ where: { email } });
     if (!usuario || !usuario.activo) {
+      fallidosPorIP.set(ip, { count: currentFails + 1, timestamp: Date.now() });
       return res.status(401).json({ error: 'Credenciales inválidas o usuario inactivo' });
     }
     const isMatch = await bcrypt.compare(password, usuario.password);
     if (!isMatch) {
+      fallidosPorIP.set(ip, { count: currentFails + 1, timestamp: Date.now() });
       return res.status(401).json({ error: 'Credenciales inválidas o usuario inactivo' });
     }
+    
+    // Success -> Clear failures
+    fallidosPorIP.delete(ip);
+    
     const token = jwt.sign({ id: usuario.id }, (process.env.JWT_SECRET as string) || 'secret', {
       expiresIn: (process.env.JWT_EXPIRES_IN || '24h') as any
     });

@@ -63,6 +63,7 @@ model Beneficiario {
   direccion       String?
   fechaNacimiento DateTime?
   grupoFamiliar   String?
+  activo          Boolean   @default(true)
   creadoPorDemo   Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
