@@ -80,8 +80,9 @@ export const login = async (req: Request, res: Response) => {
     });
 
     res.json({ token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, tipo: usuario.tipo } });
-  } catch (error) {
-    res.status(500).json({ error: 'Error en el servidor' });
+  } catch (error: any) {
+    console.error('Login Error:', error);
+    res.status(500).json({ error: error.message || String(error) });
   }
 };
 

@@ -13,6 +13,7 @@ import etiquetasRoutes from './routes/etiquetas.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import notificacionesRoutes from './routes/notificaciones.routes';
 import tiposCasoRoutes from './routes/tipos-caso.routes';
+import estadisticasRoutes from './routes/estadisticas.routes';
 
 import { startCronJobs } from './lib/cron';
 
@@ -31,8 +32,8 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use(express.json());
-// Servir archivos estáticos subidos
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+// Servir archivos estáticos subidos desde la raíz de ejecución
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Rutas API
 app.use('/api/auth', authRoutes);
@@ -45,6 +46,7 @@ app.use('/api/etiquetas', etiquetasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/tipos-caso', tiposCasoRoutes);
+app.use('/api/estadisticas', estadisticasRoutes);
 
 app.get('/', (req, res) => {
   res.send('Gestor de Casos Sociales API is running...');

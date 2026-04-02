@@ -59,7 +59,10 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     };
     
     next();
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.name === 'PrismaClientInitializationError' || error?.message?.includes("Can't reach database server")) {
+      return res.status(503).json({ error: 'Servicio no disponible: No se pudo conectar a la base de datos' });
+    }
     return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 };
