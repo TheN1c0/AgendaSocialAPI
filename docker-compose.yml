@@ -20,6 +20,7 @@ services:
     ports:
       - "5000:5000"
     environment:
+      NODE_ENV: production
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/gestorcasos
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 8h
