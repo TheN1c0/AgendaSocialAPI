@@ -203,6 +203,10 @@ export const changePassword = async (req: Request, res: Response) => {
     const { currentPassword, newPassword } = req.body;
     if (!req.user) return res.status(401).json({ error: 'No autenticado' });
     
+    if (req.user.tipo === 'demo') {
+      return res.status(403).json({ error: 'Las cuentas demo no tienen permiso para cambiar la contraseña.' });
+    }
+    
     const usuario = await prisma.usuario.findUnique({ where: { id: req.user.id } });
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
