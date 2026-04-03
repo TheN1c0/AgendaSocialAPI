@@ -89,9 +89,7 @@ export const login = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   try {
     const esProduccion = process.env.NODE_ENV === 'production';
-    const token = esProduccion
-      ? req.cookies?.token
-      : req.cookies?.token || req.headers.authorization?.split(' ')[1];
+    const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
 
     if (esProduccion && token) {
       await prisma.sesionActiva.updateMany({
@@ -122,7 +120,7 @@ export const getSesiones = async (req: Request, res: Response) => {
       return res.json({ data: [] });
     }
 
-    const tokenRequerimiento = req.cookies?.token;
+    const tokenRequerimiento = req.cookies?.token || req.headers.authorization?.split(' ')[1];
     
     if (!req.user) return res.status(401).json({ error: 'No autenticado' });
 
@@ -162,7 +160,7 @@ export const cerrarSesion = async (req: Request, res: Response) => {
       data: { activo: false }
     });
 
-    const tokenActual = req.cookies?.token;
+    const tokenActual = req.cookies?.token || req.headers.authorization?.split(' ')[1];
     if (sesion.token === tokenActual) {
       const esProduccion = process.env.NODE_ENV === 'production';
       res.clearCookie('token', {

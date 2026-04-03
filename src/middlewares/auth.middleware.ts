@@ -21,10 +21,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   try {
     const esProduccion = process.env.NODE_ENV === 'production';
 
-    // Leer token desde cookie o header según entorno
-    const token = esProduccion
-      ? req.cookies?.token
-      : req.cookies?.token || req.headers.authorization?.split(' ')[1];
+    // Leer token desde cookie o header
+    const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
 
     if (!token) {
       return res.status(401).json({ error: 'No autenticado' });
