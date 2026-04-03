@@ -25,9 +25,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Permite cualquier origen dinámicamente reflejándolo (soluciona problemas de trailing slashes)
-    callback(null, origin || true);
+  origin: function(origin, callback) {
+    callback(null, true);
   },
   credentials: true,
 }));
