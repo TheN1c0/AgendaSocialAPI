@@ -25,9 +25,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.CLIENT_URL
-    : 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Permite cualquier origen dinámicamente reflejándolo (soluciona problemas de trailing slashes)
+    callback(null, origin || true);
+  },
   credentials: true,
 }));
 app.use(cookieParser());
