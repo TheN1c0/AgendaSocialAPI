@@ -21,7 +21,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   try {
     const esProduccion = process.env.NODE_ENV === 'production';
 
-    // Leer token desde cookie o header
     const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
 
     if (!token) {
@@ -30,7 +29,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { id: string };
 
-    // Después de verificar firma JWT → solo en producción verificar SesionActiva:
     if (esProduccion) {
       const sesion = await prisma.sesionActiva.findFirst({
         where: { token, activo: true, expiraEn: { gt: new Date() } }

@@ -138,7 +138,7 @@ async function main() {
     })
     casos.push(caso)
 
-    // 9. Asignar etiquetas aleatoriamente a los casos
+    
     const label1 = tsLabels[i % tsLabels.length]
     const label2 = tsLabels[(i + 1) % tsLabels.length]
     await prisma.etiquetaCaso.create({ data: { casoId: caso.id, etiquetaId: label1.id } })
@@ -146,7 +146,7 @@ async function main() {
       await prisma.etiquetaCaso.create({ data: { casoId: caso.id, etiquetaId: label2.id } })
     }
 
-    // 7. Crear 3 intervenciones por caso con fechas progresivas
+    
     for (let j = 0; j < 3; j++) {
       await prisma.intervencion.create({
         data: {
@@ -154,12 +154,12 @@ async function main() {
           autorId: asignadoA.id,
           descripcion: `Intervención ${j + 1} para el caso ${caso.id}`,
           creadoPorDemo: false,
-          createdAt: new Date(Date.now() - (3 - j) * 86400000) // progressive dates
+          createdAt: new Date(Date.now() - (3 - j) * 86400000)
         }
       })
     }
 
-    // 8. Crear 2 documentos por caso (registro sin archivo real)
+    
     for (let k = 0; k < 2; k++) {
       await prisma.documento.create({
         data: {
