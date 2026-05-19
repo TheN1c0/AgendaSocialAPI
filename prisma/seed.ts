@@ -116,6 +116,21 @@ async function main() {
 
   const tsLabels = await prisma.etiqueta.findMany({ where: { usuarioId: demoUser.id } })
 
+  // Limpiar casos anteriores del usuario demo que fueron creados por el seed
+  // para evitar duplicados al correr la automatización o el seed varias veces
+  const oldCases = await prisma.caso.findMany({
+    where: { asignadoAId: demoUser.id, creadoPorDemo: false }
+  });
+  
+  const oldCasesIds = oldCases.map(c => c.id);
+  if (oldCasesIds.length > 0) {
+    await prisma.etiquetaCaso.deleteMany({ where: { casoId: { in: oldCasesIds } } });
+    await prisma.intervencion.deleteMany({ where: { casoId: { in: oldCasesIds } } });
+    await prisma.documento.deleteMany({ where: { casoId: { in: oldCasesIds } } });
+    await prisma.notificacion.deleteMany({ where: { casoId: { in: oldCasesIds } } });
+    await prisma.caso.deleteMany({ where: { id: { in: oldCasesIds } } });
+  }
+
   const casos = []
   for (let i = 0; i < 10; i++) {
     const asignadoA = demoUser // Todos los casos iniciales asignados al usuario demo
